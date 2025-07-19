@@ -105,40 +105,17 @@ export default function Dashboard() {
         const interval = setInterval(() => {
             setShipments((prevShipments) =>
                 prevShipments.map((shipment) => {
-                    // Randomize ETA slightly
-                    const etaDate = new Date(shipment.eta);
-                    const randomMinutes = Math.floor(Math.random() * 11) - 5;
-                    etaDate.setMinutes(etaDate.getMinutes() + randomMinutes);
-
-                    // Higher chance to change status
-                    let newStatus = shipment.status;
-                    if (Math.random() < 0.5) {
-                        if (shipment.status === 'In Transit') newStatus = 'Delivered';
-                        else if (shipment.status === 'Delivered') newStatus = 'Delayed';
-                        else if (shipment.status === 'Delayed') newStatus = 'In Transit';
-                    }
-
-                    // Slightly change route coordinates
-                    const randomShift = () => (Math.random() - 0.5) * 0.1;
-                    const newOriginCoords = [
-                        shipment.originCoords[0] + randomShift(),
-                        shipment.originCoords[1] + randomShift(),
-                    ];
-                    const newDestinationCoords = [
-                        shipment.destinationCoords[0] + randomShift(),
-                        shipment.destinationCoords[1] + randomShift(),
-                    ];
+                    const [origLat, origLng] = shipment.originCoords ?? [0, 0];
+                    const [destLat, destLng] = shipment.destinationCoords ?? [0, 0];
 
                     return {
                         ...shipment,
-                        eta: etaDate.toISOString(),
-                        status: newStatus,
-                        originCoords: newOriginCoords,
-                        destinationCoords: newDestinationCoords,
+                        originCoords: [origLat + 0.01, origLng + 0.01] as [number, number],
+                        destinationCoords: [destLat + 0.01, destLng + 0.01] as [number, number],
                     };
                 })
             );
-        }, 2000);
+        }, 5000);
 
         return () => clearInterval(interval);
     }, []);
