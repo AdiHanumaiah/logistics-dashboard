@@ -22,7 +22,7 @@ import {
 } from '@chakra-ui/react';
 import { Upload } from 'lucide-react';
 
-// Dynamic import for ShipmentMap to avoid SSR issues
+// Dynamically import ShipmentMap with SSR disabled
 const ShipmentMap = dynamic(() => import('@/components/ShipmentMap'), { ssr: false });
 
 type Shipment = {
@@ -95,56 +95,46 @@ const initialShipments: Shipment[] = [
     },
 ];
 
-const statuses = ['All', 'In Transit', 'Delivered', 'Delayed'] as const;
+const statuses = ['In Transit', 'Delivered', 'Delayed'] as const;
 
 export default function Dashboard() {
     const [shipments, setShipments] = useState<Shipment[]>(initialShipments);
-    const [filterStatus, setFilterStatus] = useState<typeof statuses[number]>('All');
+    const [filterStatus, setFilterStatus] = useState<'All' | typeof statuses[number]>('All');
     const [sortByEtaAsc, setSortByEtaAsc] = useState(true);
 
-    // Fully dynamic update every 5 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             setShipments((prevShipments) =>
                 prevShipments.map((shipment) => {
-                    // Example: update coords slightly and toggle status for demo purposes
-                    const [origLat, origLng] = shipment.originCoords;
-                    const [destLat, destLng] = shipment.destinationCoords;
+                    // Move coordinates slightly
+                    const [origLat, origLng] = shipment.originCoords ?? [0, 0];
+                    const [destLat, destLng] = shipment.destinationCoords ?? [0, 0];
 
-                    // Update coordinates +0.01 every 5s (looping back to original after a limit)
-                    const newOrigLat = origLat + 0.01 > 40 ? 38.89511 : origLat + 0.01;
-                    const newOrigLng = origLng + 0.01 > -70 ? -77.03637 : origLng + 0.01;
+                    // Randomly update status
+                    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
 
-                    const newDestLat = destLat + 0.01 > 42 ? 40.7128 : destLat + 0.01;
-                    const newDestLng = destLng + 0.01 > -70 ? -74.006 : destLng + 0.01;
-
-                    // For demo: randomly toggle status between In Transit and Delivered
-                    const newStatus =
-                        shipment.status === 'In Transit'
-                            ? 'Delivered'
-                            : shipment.status === 'Delivered'
-                                ? 'Delayed'
-                                : 'In Transit';
-
-                    // For demo: advance ETA by 1 minute each update
-                    const newEta = new Date(new Date(shipment.eta).getTime() + 60000).toISOString();
+                    // Randomly adjust ETA by adding or subtracting 1 to 3 hours
+                    const currentEta = new Date(shipment.eta).getTime();
+                    const hourShift = (Math.floor(Math.random() * 7) - 3) * 3600000; // -3h to +3h
+                    const newEta = new Date(currentEta + hourShift).toISOString();
 
                     return {
                         ...shipment,
-                        originCoords: [newOrigLat, newOrigLng],
-                        destinationCoords: [newDestLat, newDestLng],
-                        status: newStatus,
+                        originCoords: [origLat + 0.005, origLng + 0.005] as [number, number],
+                        destinationCoords: [destLat + 0.005, destLng + 0.005] as [number, number],
+                        status: randomStatus,
                         eta: newEta,
                     };
                 })
             );
-        }, 3000);
+        }, 3000); // every 3 seconds
 
         return () => clearInterval(interval);
     }, []);
 
     const filteredShipments = useMemo(() => {
-        let filtered = filterStatus === 'All' ? shipments : shipments.filter((s) => s.status === filterStatus);
+        let filtered =
+            filterStatus === 'All' ? shipments : shipments.filter((s) => s.status === filterStatus);
         filtered = filtered.sort((a, b) => {
             const dateA = new Date(a.eta);
             const dateB = new Date(b.eta);
@@ -154,8 +144,11 @@ export default function Dashboard() {
     }, [shipments, filterStatus, sortByEtaAsc]);
 
     const activeDeliveries = shipments.filter((s) => s.status === 'In Transit').length;
-    const onTimeRate = Math.round((shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100);
-    const avgDeliveryTime = 38;
+    const onTimeRate = Math.round(
+        (shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100
+    );
+    // For demo, avgDeliveryTime is random between 30-50 mins
+    const avgDeliveryTime = Math.floor(30 + Math.random() * 20);
 
     const formatETA = (eta: string) => {
         const date = new Date(eta);
@@ -164,8 +157,18 @@ export default function Dashboard() {
 
     const exportToCSV = () => {
         const header = ['Shipment ID', 'Origin', 'Destination', 'Status', 'ETA', 'Notes', 'Document'];
-        const rows = filteredShipments.map((s) => [s.id, s.origin, s.destination, s.status, formatETA(s.eta), s.notes || '', s.doc?.name || '']);
-        const csvContent = [header, ...rows].map((e) => e.map((cell) => `"${cell}"`).join(',')).join('\n');
+        const rows = filteredShipments.map((s) => [
+            s.id,
+            s.origin,
+            s.destination,
+            s.status,
+            formatETA(s.eta),
+            s.notes || '',
+            s.doc?.name || '',
+        ]);
+        const csvContent = [header, ...rows]
+            .map((e) => e.map((cell) => `"${cell}"`).join(','))
+            .join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -249,7 +252,7 @@ export default function Dashboard() {
                     onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
                     maxW="200px"
                 >
-                    {statuses.map((status) => (
+                    {['All', ...statuses].map((status) => (
                         <option key={status} value={status}>
                             {status}
                         </option>
