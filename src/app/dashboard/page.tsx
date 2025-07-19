@@ -207,8 +207,35 @@ export default function Dashboard() {
     };
 
     return (
-        <Box p={10}>
-            <Heading mb={6}>Dashboard</Heading>
+        <Box p={0}>
+            <Box
+                mb={6}
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                p={4}
+                bg="gray.100"
+                borderRadius="md"
+            >
+                <Heading size="md">Admin Dashboard</Heading>
+                <Box display="flex" alignItems="center" gap={3}>
+                    <Text fontWeight="medium">Welcome, Admin</Text>
+                    <Box
+                        w={8}
+                        h={8}
+                        borderRadius="full"
+                        bg="blue.500"
+                        color="white"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        fontWeight="bold"
+                    >
+                        A
+                    </Box>
+                </Box>
+            </Box>
+            {/* <Heading mb={6}>Dashboard</Heading> */}
 
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={10}>
                 <Stat>
