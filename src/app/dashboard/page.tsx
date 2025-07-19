@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import ShipmentMap from '@/components/ShipmentMap';
 import {
     Box,
@@ -15,34 +16,59 @@ import {
     Th,
     Td,
     Text,
-    VStack,          // <-- Import VStack here
+    VStack,
 } from '@chakra-ui/react';
 
-const mockShipments = [
-    {
-        id: 'SHP001',
-        origin: 'Warehouse A',
-        destination: 'Store 12',
-        status: 'In Transit',
-        eta: '2025-07-20 14:00',
-    },
-    {
-        id: 'SHP002',
-        origin: 'Warehouse B',
-        destination: 'Store 7',
-        status: 'Delivered',
-        eta: '2025-07-18 10:30',
-    },
-    {
-        id: 'SHP003',
-        origin: 'Warehouse C',
-        destination: 'Store 3',
-        status: 'Delayed',
-        eta: '2025-07-19 16:00',
-    },
-];
+function generateRandomShipments() {
+    const statuses = ['In Transit', 'Delivered', 'Delayed'];
+    const randomTime = () => {
+        const date = new Date();
+        date.setMinutes(date.getMinutes() + Math.floor(Math.random() * 120));
+        return date.toISOString().slice(0, 16).replace('T', ' ');
+    };
+
+    return [
+        {
+            id: 'SHP001',
+            origin: 'Warehouse A',
+            destination: 'Store 12',
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            eta: randomTime(),
+        },
+        {
+            id: 'SHP002',
+            origin: 'Warehouse B',
+            destination: 'Store 7',
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            eta: randomTime(),
+        },
+        {
+            id: 'SHP003',
+            origin: 'Warehouse C',
+            destination: 'Store 3',
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            eta: randomTime(),
+        },
+    ];
+}
 
 export default function Dashboard() {
+    const [shipments, setShipments] = useState(generateRandomShipments());
+    const [activeDeliveries, setActiveDeliveries] = useState(42);
+    const [onTimeRate, setOnTimeRate] = useState(94);
+    const [avgDeliveryTime, setAvgDeliveryTime] = useState(38);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setShipments(generateRandomShipments());
+            setActiveDeliveries(30 + Math.floor(Math.random() * 30));
+            setOnTimeRate(85 + Math.floor(Math.random() * 15));
+            setAvgDeliveryTime(30 + Math.floor(Math.random() * 20));
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <Box p={10}>
             <Heading mb={6}>Dashboard</Heading>
@@ -50,30 +76,28 @@ export default function Dashboard() {
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={10}>
                 <Stat>
                     <StatLabel>Active Deliveries</StatLabel>
-                    <StatNumber>42</StatNumber>
+                    <StatNumber>{activeDeliveries}</StatNumber>
                     <Text>Currently in progress</Text>
                 </Stat>
 
                 <Stat>
                     <StatLabel>On-Time Rate</StatLabel>
-                    <StatNumber>94%</StatNumber>
+                    <StatNumber>{onTimeRate}%</StatNumber>
                     <Text>Deliveries on time this week</Text>
                 </Stat>
 
                 <Stat>
                     <StatLabel>Avg. Delivery Time</StatLabel>
-                    <StatNumber>38 mins</StatNumber>
+                    <StatNumber>{avgDeliveryTime} mins</StatNumber>
                     <Text>Last 7 days average</Text>
                 </Stat>
             </SimpleGrid>
 
-            {/* Wrap map and table in VStack with spacing */}
-            <VStack spacing={8} align="stretch">
+            <VStack spacing={6} align="stretch">
                 <Box>
                     <Heading size="md" mb={4}>
                         Live Shipment Map
                     </Heading>
-                    {/* Add borderRadius and overflow here for neat edges */}
                     <Box h="400px" borderRadius="md" overflow="hidden">
                         <ShipmentMap />
                     </Box>
@@ -83,6 +107,7 @@ export default function Dashboard() {
                     <Heading size="md" mb={4}>
                         Recent Shipments
                     </Heading>
+
                     <Table variant="simple" size="md">
                         <Thead>
                             <Tr>
@@ -94,7 +119,7 @@ export default function Dashboard() {
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {mockShipments.map((shipment) => (
+                            {shipments.map((shipment) => (
                                 <Tr key={shipment.id}>
                                     <Td>{shipment.id}</Td>
                                     <Td>{shipment.origin}</Td>
