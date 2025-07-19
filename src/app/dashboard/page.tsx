@@ -22,7 +22,7 @@ import {
 } from '@chakra-ui/react';
 import { Upload } from 'lucide-react';
 
-// Dynamically import ShipmentMap with SSR disabled
+// Dynamic import for ShipmentMap to avoid SSR issues
 const ShipmentMap = dynamic(() => import('@/components/ShipmentMap'), { ssr: false });
 
 type Shipment = {
@@ -102,28 +102,49 @@ export default function Dashboard() {
     const [filterStatus, setFilterStatus] = useState<typeof statuses[number]>('All');
     const [sortByEtaAsc, setSortByEtaAsc] = useState(true);
 
+    // Fully dynamic update every 5 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             setShipments((prevShipments) =>
                 prevShipments.map((shipment) => {
-                    const [origLat, origLng] = shipment.originCoords ?? [0, 0];
-                    const [destLat, destLng] = shipment.destinationCoords ?? [0, 0];
+                    // Example: update coords slightly and toggle status for demo purposes
+                    const [origLat, origLng] = shipment.originCoords;
+                    const [destLat, destLng] = shipment.destinationCoords;
+
+                    // Update coordinates +0.01 every 5s (looping back to original after a limit)
+                    const newOrigLat = origLat + 0.01 > 40 ? 38.89511 : origLat + 0.01;
+                    const newOrigLng = origLng + 0.01 > -70 ? -77.03637 : origLng + 0.01;
+
+                    const newDestLat = destLat + 0.01 > 42 ? 40.7128 : destLat + 0.01;
+                    const newDestLng = destLng + 0.01 > -70 ? -74.006 : destLng + 0.01;
+
+                    // For demo: randomly toggle status between In Transit and Delivered
+                    const newStatus =
+                        shipment.status === 'In Transit'
+                            ? 'Delivered'
+                            : shipment.status === 'Delivered'
+                                ? 'Delayed'
+                                : 'In Transit';
+
+                    // For demo: advance ETA by 1 minute each update
+                    const newEta = new Date(new Date(shipment.eta).getTime() + 60000).toISOString();
 
                     return {
                         ...shipment,
-                        originCoords: [origLat + 0.01, origLng + 0.01] as [number, number],
-                        destinationCoords: [destLat + 0.01, destLng + 0.01] as [number, number],
+                        originCoords: [newOrigLat, newOrigLng],
+                        destinationCoords: [newDestLat, newDestLng],
+                        status: newStatus,
+                        eta: newEta,
                     };
                 })
             );
-        }, 5000);
+        }, 3000);
 
         return () => clearInterval(interval);
     }, []);
 
     const filteredShipments = useMemo(() => {
-        let filtered =
-            filterStatus === 'All' ? shipments : shipments.filter((s) => s.status === filterStatus);
+        let filtered = filterStatus === 'All' ? shipments : shipments.filter((s) => s.status === filterStatus);
         filtered = filtered.sort((a, b) => {
             const dateA = new Date(a.eta);
             const dateB = new Date(b.eta);
@@ -133,9 +154,7 @@ export default function Dashboard() {
     }, [shipments, filterStatus, sortByEtaAsc]);
 
     const activeDeliveries = shipments.filter((s) => s.status === 'In Transit').length;
-    const onTimeRate = Math.round(
-        (shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100
-    );
+    const onTimeRate = Math.round((shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100);
     const avgDeliveryTime = 38;
 
     const formatETA = (eta: string) => {
@@ -145,18 +164,8 @@ export default function Dashboard() {
 
     const exportToCSV = () => {
         const header = ['Shipment ID', 'Origin', 'Destination', 'Status', 'ETA', 'Notes', 'Document'];
-        const rows = filteredShipments.map((s) => [
-            s.id,
-            s.origin,
-            s.destination,
-            s.status,
-            formatETA(s.eta),
-            s.notes || '',
-            s.doc?.name || '',
-        ]);
-        const csvContent = [header, ...rows]
-            .map((e) => e.map((cell) => `"${cell}"`).join(','))
-            .join('\n');
+        const rows = filteredShipments.map((s) => [s.id, s.origin, s.destination, s.status, formatETA(s.eta), s.notes || '', s.doc?.name || '']);
+        const csvContent = [header, ...rows].map((e) => e.map((cell) => `"${cell}"`).join(',')).join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
