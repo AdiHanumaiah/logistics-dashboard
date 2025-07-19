@@ -6,8 +6,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import React from 'react';
 
-// Fix default icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// Fix default icon issue without using `any`
+delete (L.Icon.Default.prototype as { _getIconUrl?: () => string })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -20,19 +20,14 @@ type Shipment = {
   destination: string;
   status: string;
   eta: string;
-  // You can add coordinates here if needed for markers
   originCoords?: [number, number];
   destinationCoords?: [number, number];
 };
 
 export default function ShipmentMap({ shipments }: { shipments: Shipment[] }) {
-  // Provide some fallback if shipments undefined or empty
   if (!shipments || shipments.length === 0) {
     return <Box h="400px">No shipments to display on map</Box>;
   }
-
-  // Example: You need coordinates to display markers/lines — make sure your shipments have them!
-  // For demo purposes, I’ll assume each shipment has originCoords and destinationCoords.
 
   return (
     <Box h="100%" w="100%">
