@@ -8,6 +8,8 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Routes', href: '/routes' },
   { label: 'Drivers', href: '/drivers' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Subscribe', href: '/subscribe' },
 ];
 
 export default function Sidebar() {
