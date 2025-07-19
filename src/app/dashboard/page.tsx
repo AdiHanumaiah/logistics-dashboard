@@ -18,10 +18,25 @@ import {
     Td,
     Text,
     Select,
+    Input,
 } from '@chakra-ui/react';
+import { Upload } from 'lucide-react';
 
-// Initial shipment data
-const initialShipments = [
+// Extend shipment type to include notes and doc
+type Shipment = {
+    id: string;
+    origin: string;
+    originCoords: [number, number];
+    destination: string;
+    destinationCoords: [number, number];
+    status: string;
+    eta: string;
+    notes?: string;
+    doc?: File | null;
+};
+
+// Initial shipment data with notes and doc fields
+const initialShipments: Shipment[] = [
     {
         id: 'SHP001',
         origin: 'Warehouse A',
@@ -30,6 +45,8 @@ const initialShipments = [
         destinationCoords: [40.7128, -74.006],
         status: 'In Transit',
         eta: '2025-07-20T14:00:00Z',
+        notes: '',
+        doc: null,
     },
     {
         id: 'SHP002',
@@ -39,6 +56,8 @@ const initialShipments = [
         destinationCoords: [39.7392, -104.9903],
         status: 'Delivered',
         eta: '2025-07-18T10:30:00Z',
+        notes: '',
+        doc: null,
     },
     {
         id: 'SHP003',
@@ -48,6 +67,8 @@ const initialShipments = [
         destinationCoords: [36.1699, -115.1398],
         status: 'Delayed',
         eta: '2025-07-19T16:00:00Z',
+        notes: '',
+        doc: null,
     },
     {
         id: 'SHP004',
@@ -57,6 +78,8 @@ const initialShipments = [
         destinationCoords: [32.7767, -96.797],
         status: 'In Transit',
         eta: '2025-07-21T12:00:00Z',
+        notes: '',
+        doc: null,
     },
     {
         id: 'SHP005',
@@ -66,13 +89,15 @@ const initialShipments = [
         destinationCoords: [38.9072, -77.0369],
         status: 'Delivered',
         eta: '2025-07-17T09:00:00Z',
+        notes: '',
+        doc: null,
     },
 ];
 
 const statuses = ['All', 'In Transit', 'Delivered', 'Delayed'] as const;
 
 export default function Dashboard() {
-    const [shipments, setShipments] = useState(initialShipments);
+    const [shipments, setShipments] = useState<Shipment[]>(initialShipments);
     const [filterStatus, setFilterStatus] = useState<typeof statuses[number]>('All');
     const [sortByEtaAsc, setSortByEtaAsc] = useState(true);
 
@@ -87,7 +112,7 @@ export default function Dashboard() {
 
                     // Higher chance to change status
                     let newStatus = shipment.status;
-                    if (Math.random() < 0.5) { // 50% chance to change
+                    if (Math.random() < 0.5) {
                         if (shipment.status === 'In Transit') newStatus = 'Delivered';
                         else if (shipment.status === 'Delivered') newStatus = 'Delayed';
                         else if (shipment.status === 'Delayed') newStatus = 'In Transit';
@@ -113,13 +138,16 @@ export default function Dashboard() {
                     };
                 })
             );
-        }, 2000); // update every 2 seconds
+        }, 2000);
 
         return () => clearInterval(interval);
     }, []);
 
     const filteredShipments = useMemo(() => {
-        let filtered = filterStatus === 'All' ? shipments : shipments.filter((s) => s.status === filterStatus);
+        let filtered =
+            filterStatus === 'All'
+                ? shipments
+                : shipments.filter((s) => s.status === filterStatus);
         filtered = filtered.sort((a, b) => {
             const dateA = new Date(a.eta);
             const dateB = new Date(b.eta);
@@ -129,28 +157,31 @@ export default function Dashboard() {
     }, [shipments, filterStatus, sortByEtaAsc]);
 
     const activeDeliveries = shipments.filter((s) => s.status === 'In Transit').length;
-    const onTimeRate = Math.round((shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100);
-    const avgDeliveryTime = 38; // static for now
+    const onTimeRate = Math.round(
+        (shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100
+    );
+    const avgDeliveryTime = 38;
 
     const formatETA = (eta: string) => {
         const date = new Date(eta);
         return date.toLocaleString();
     };
 
-    // Export filtered shipments to CSV
+    // Export filtered shipments to CSV including notes and doc name
     const exportToCSV = () => {
-        const header = ['Shipment ID', 'Origin', 'Destination', 'Status', 'ETA'];
-        const rows = filteredShipments.map(s => [
+        const header = ['Shipment ID', 'Origin', 'Destination', 'Status', 'ETA', 'Notes', 'Document'];
+        const rows = filteredShipments.map((s) => [
             s.id,
             s.origin,
             s.destination,
             s.status,
             formatETA(s.eta),
+            s.notes || '',
+            s.doc?.name || '',
         ]);
-        const csvContent =
-            [header, ...rows]
-                .map(e => e.map(cell => `"${cell}"`).join(','))
-                .join('\n');
+        const csvContent = [header, ...rows]
+            .map((e) => e.map((cell) => `"${cell}"`).join(','))
+            .join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -161,6 +192,18 @@ export default function Dashboard() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const handleNotesChange = (id: string, value: string) => {
+        setShipments((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, notes: value } : s))
+        );
+    };
+
+    const handleFileChange = (id: string, file: File | null) => {
+        setShipments((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, doc: file } : s))
+        );
     };
 
     return (
@@ -185,7 +228,9 @@ export default function Dashboard() {
                 </Stat>
             </SimpleGrid>
 
-            <Heading size="md" mb={4}>Live Shipment Map</Heading>
+            <Heading size="md" mb={4}>
+                Live Shipment Map
+            </Heading>
 
             <Box h="400px" mb={6}>
                 <ShipmentMap shipments={filteredShipments} />
@@ -220,7 +265,9 @@ export default function Dashboard() {
                 </Button>
             </Box>
 
-            <Heading size="md" mb={4}>Recent Shipments</Heading>
+            <Heading size="md" mb={4}>
+                Recent Shipments
+            </Heading>
 
             <Table variant="simple" size="md">
                 <Thead>
@@ -230,6 +277,8 @@ export default function Dashboard() {
                         <Th>Destination</Th>
                         <Th>Status</Th>
                         <Th>ETA</Th>
+                        <Th>Notes</Th>
+                        <Th>Upload Document</Th>
                     </Tr>
                 </Thead>
                 <Tbody>
@@ -240,6 +289,44 @@ export default function Dashboard() {
                             <Td>{shipment.destination}</Td>
                             <Td>{shipment.status}</Td>
                             <Td>{formatETA(shipment.eta)}</Td>
+
+                            <Td>
+                                <Input
+                                    size="sm"
+                                    placeholder="Add notes"
+                                    value={shipment.notes || ''}
+                                    onChange={(e) => handleNotesChange(shipment.id, e.target.value)}
+                                />
+                            </Td>
+
+                            <Td>
+                                <input
+                                    type="file"
+                                    id={`file-upload-${shipment.id}`}
+                                    style={{ display: 'none' }}
+                                    onChange={(e) =>
+                                        handleFileChange(
+                                            shipment.id,
+                                            e.target.files ? e.target.files[0] : null
+                                        )
+                                    }
+                                />
+                                <label htmlFor={`file-upload-${shipment.id}`}>
+                                    <Button
+                                        as="span"
+                                        size="sm"
+                                        leftIcon={<Upload size={16} />}
+                                        colorScheme="blue"
+                                    >
+                                        {shipment.doc ? 'Change File' : 'Upload File'}
+                                    </Button>
+                                </label>
+                                {shipment.doc && (
+                                    <Text mt={1} fontSize="xs" isTruncated maxW="150px" title={shipment.doc.name}>
+                                        {shipment.doc.name}
+                                    </Text>
+                                )}
+                            </Td>
                         </Tr>
                     ))}
                 </Tbody>
