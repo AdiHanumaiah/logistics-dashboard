@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import ShipmentMap from '@/components/ShipmentMap';
+import dynamic from 'next/dynamic';
 import {
     Box,
     Button,
@@ -21,6 +21,9 @@ import {
     Input,
 } from '@chakra-ui/react';
 import { Upload } from 'lucide-react';
+
+// Dynamically import ShipmentMap with SSR disabled
+const ShipmentMap = dynamic(() => import('@/components/ShipmentMap'), { ssr: false });
 
 type Shipment = {
     id: string;
@@ -141,8 +144,6 @@ export default function Dashboard() {
     };
 
     const exportToCSV = () => {
-        if (typeof window === 'undefined') return;
-
         const header = ['Shipment ID', 'Origin', 'Destination', 'Status', 'ETA', 'Notes', 'Document'];
         const rows = filteredShipments.map((s) => [
             s.id,
@@ -159,6 +160,7 @@ export default function Dashboard() {
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
+
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', 'shipments.csv');
@@ -304,12 +306,7 @@ export default function Dashboard() {
                                     }
                                 />
                                 <label htmlFor={`file-upload-${shipment.id}`}>
-                                    <Button
-                                        as="span"
-                                        size="sm"
-                                        leftIcon={<Upload size={16} />}
-                                        colorScheme="blue"
-                                    >
+                                    <Button as="span" size="sm" leftIcon={<Upload size={16} />} colorScheme="blue">
                                         {shipment.doc ? 'Change File' : 'Upload File'}
                                     </Button>
                                 </label>
