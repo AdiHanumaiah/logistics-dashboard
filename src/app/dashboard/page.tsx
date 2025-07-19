@@ -22,7 +22,6 @@ import {
 } from '@chakra-ui/react';
 import { Upload } from 'lucide-react';
 
-// Extend shipment type to include notes and doc
 type Shipment = {
     id: string;
     origin: string;
@@ -35,7 +34,6 @@ type Shipment = {
     doc?: File | null;
 };
 
-// Initial shipment data with notes and doc fields
 const initialShipments: Shipment[] = [
     {
         id: 'SHP001',
@@ -122,9 +120,7 @@ export default function Dashboard() {
 
     const filteredShipments = useMemo(() => {
         let filtered =
-            filterStatus === 'All'
-                ? shipments
-                : shipments.filter((s) => s.status === filterStatus);
+            filterStatus === 'All' ? shipments : shipments.filter((s) => s.status === filterStatus);
         filtered = filtered.sort((a, b) => {
             const dateA = new Date(a.eta);
             const dateB = new Date(b.eta);
@@ -144,8 +140,9 @@ export default function Dashboard() {
         return date.toLocaleString();
     };
 
-    // Export filtered shipments to CSV including notes and doc name
     const exportToCSV = () => {
+        if (typeof window === 'undefined') return;
+
         const header = ['Shipment ID', 'Origin', 'Destination', 'Status', 'ETA', 'Notes', 'Document'];
         const rows = filteredShipments.map((s) => [
             s.id,
@@ -162,7 +159,6 @@ export default function Dashboard() {
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', 'shipments.csv');
@@ -172,15 +168,11 @@ export default function Dashboard() {
     };
 
     const handleNotesChange = (id: string, value: string) => {
-        setShipments((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, notes: value } : s))
-        );
+        setShipments((prev) => prev.map((s) => (s.id === id ? { ...s, notes: value } : s)));
     };
 
     const handleFileChange = (id: string, file: File | null) => {
-        setShipments((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, doc: file } : s))
-        );
+        setShipments((prev) => prev.map((s) => (s.id === id ? { ...s, doc: file } : s)));
     };
 
     return (
@@ -212,7 +204,6 @@ export default function Dashboard() {
                     </Box>
                 </Box>
             </Box>
-            {/* <Heading mb={6}>Dashboard</Heading> */}
 
             <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={10}>
                 <Stat>
@@ -309,10 +300,7 @@ export default function Dashboard() {
                                     id={`file-upload-${shipment.id}`}
                                     style={{ display: 'none' }}
                                     onChange={(e) =>
-                                        handleFileChange(
-                                            shipment.id,
-                                            e.target.files ? e.target.files[0] : null
-                                        )
+                                        handleFileChange(shipment.id, e.target.files ? e.target.files[0] : null)
                                     }
                                 />
                                 <label htmlFor={`file-upload-${shipment.id}`}>
