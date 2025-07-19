@@ -2,17 +2,23 @@
 
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Box } from '@chakra-ui/react';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import React, { useEffect } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Fix default icon issue
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl: () => void })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+if (typeof window !== 'undefined') {
+  const icon = L.icon({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+
+  L.Marker.prototype.options.icon = icon;
+}
 
 type Shipment = {
   id: string;
@@ -52,13 +58,16 @@ export default function ShipmentMap({ shipments }: { shipments: Shipment[] }) {
   return (
     <Box h="100%" w="100%">
       <MapContainer center={[39.8283, -98.5795]} zoom={4} style={{ height: '100%', width: '100%' }}>
-        <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          attribution="&copy; OpenStreetMap contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
         {shipments.map(({ id, originCoords, destinationCoords, origin, destination, status }) => {
           if (!originCoords || !destinationCoords) return null;
 
-          const originKey = `${id}-origin-${originCoords[0].toFixed(5)}-${originCoords[1].toFixed(5)}`;
-          const destKey = `${id}-dest-${destinationCoords[0].toFixed(5)}-${destinationCoords[1].toFixed(5)}`;
-          const polylineKey = `${id}-polyline-${originCoords[0].toFixed(5)}-${originCoords[1].toFixed(5)}-${destinationCoords[0].toFixed(5)}-${destinationCoords[1].toFixed(5)}`;
+          const originKey = `${id}-origin`;
+          const destKey = `${id}-dest`;
+          const polylineKey = `${id}-polyline`;
 
           return (
             <React.Fragment key={id}>
