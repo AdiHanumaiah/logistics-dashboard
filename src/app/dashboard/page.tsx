@@ -95,28 +95,39 @@ const initialShipments: Shipment[] = [
     },
 ];
 
-const statuses = ['All', 'In Transit', 'Delivered', 'Delayed'] as const;
+const statuses = ['In Transit', 'Delivered', 'Delayed'] as const;
 
 export default function Dashboard() {
     const [shipments, setShipments] = useState<Shipment[]>(initialShipments);
-    const [filterStatus, setFilterStatus] = useState<typeof statuses[number]>('All');
+    const [filterStatus, setFilterStatus] = useState<'All' | typeof statuses[number]>('All');
     const [sortByEtaAsc, setSortByEtaAsc] = useState(true);
 
     useEffect(() => {
         const interval = setInterval(() => {
             setShipments((prevShipments) =>
                 prevShipments.map((shipment) => {
+                    // Move coordinates slightly
                     const [origLat, origLng] = shipment.originCoords ?? [0, 0];
                     const [destLat, destLng] = shipment.destinationCoords ?? [0, 0];
 
+                    // Randomly update status
+                    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+                    // Randomly adjust ETA by adding or subtracting 1 to 3 hours
+                    const currentEta = new Date(shipment.eta).getTime();
+                    const hourShift = (Math.floor(Math.random() * 7) - 3) * 3600000; // -3h to +3h
+                    const newEta = new Date(currentEta + hourShift).toISOString();
+
                     return {
                         ...shipment,
-                        originCoords: [origLat + 0.01, origLng + 0.01] as [number, number],
-                        destinationCoords: [destLat + 0.01, destLng + 0.01] as [number, number],
+                        originCoords: [origLat + 0.005, origLng + 0.005] as [number, number],
+                        destinationCoords: [destLat + 0.005, destLng + 0.005] as [number, number],
+                        status: randomStatus,
+                        eta: newEta,
                     };
                 })
             );
-        }, 5000);
+        }, 3000); // every 3 seconds
 
         return () => clearInterval(interval);
     }, []);
@@ -136,7 +147,8 @@ export default function Dashboard() {
     const onTimeRate = Math.round(
         (shipments.filter((s) => s.status === 'Delivered').length / shipments.length) * 100
     );
-    const avgDeliveryTime = 38;
+    // For demo, avgDeliveryTime is random between 30-50 mins
+    const avgDeliveryTime = Math.floor(30 + Math.random() * 20);
 
     const formatETA = (eta: string) => {
         const date = new Date(eta);
@@ -178,20 +190,17 @@ export default function Dashboard() {
     };
 
     return (
-        <Box p={{ base: 2, md: 6 }} maxW="100vw" overflowX="auto">
+        <Box p={0}>
             <Box
                 mb={6}
                 display="flex"
-                flexDirection={{ base: 'column', md: 'row' }}
-                alignItems={{ base: 'flex-start', md: 'center' }}
+                alignItems="center"
                 justifyContent="space-between"
                 p={4}
                 bg="gray.100"
                 borderRadius="md"
             >
-                <Heading size="md" mb={{ base: 2, md: 0 }}>
-                    Admin Dashboard
-                </Heading>
+                <Heading size="md">Admin Dashboard</Heading>
                 <Box display="flex" alignItems="center" gap={3}>
                     <Text fontWeight="medium">Welcome, Admin</Text>
                     <Box
@@ -210,7 +219,7 @@ export default function Dashboard() {
                 </Box>
             </Box>
 
-            <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6} mb={10}>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={10}>
                 <Stat>
                     <StatLabel>Active Deliveries</StatLabel>
                     <StatNumber>{activeDeliveries}</StatNumber>
@@ -231,57 +240,36 @@ export default function Dashboard() {
             <Heading size="md" mb={4}>
                 Live Shipment Map
             </Heading>
-            <Box h={{ base: '300px', md: '400px' }} mb={6}>
+
+            <Box h="400px" mb={6}>
                 <ShipmentMap shipments={filteredShipments} />
             </Box>
 
-            <Box
-                mb={4}
-                display="flex"
-                flexDirection={{ base: 'column', md: 'row' }}
-                alignItems="center"
-                gap={4}
-            >
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={2}
-                    flexWrap="wrap"
-                    w={{ base: '100%', md: 'auto' }}
+            <Box mb={4} display="flex" alignItems="center" gap={4}>
+                <Text>Filter by Status:</Text>
+                <Select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
+                    maxW="200px"
                 >
-                    <Text>Filter by Status:</Text>
-                    <Select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-                        maxW={{ base: '100%', md: '200px' }}
-                    >
-                        {statuses.map((status) => (
-                            <option key={status} value={status}>
-                                {status}
-                            </option>
-                        ))}
-                    </Select>
-                </Box>
+                    {['All', ...statuses].map((status) => (
+                        <option key={status} value={status}>
+                            {status}
+                        </option>
+                    ))}
+                </Select>
 
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={2}
-                    flexWrap="wrap"
-                    w={{ base: '100%', md: 'auto' }}
+                <Text>Sort by ETA:</Text>
+                <Select
+                    value={sortByEtaAsc ? 'asc' : 'desc'}
+                    onChange={(e) => setSortByEtaAsc(e.target.value === 'asc')}
+                    maxW="150px"
                 >
-                    <Text>Sort by ETA:</Text>
-                    <Select
-                        value={sortByEtaAsc ? 'asc' : 'desc'}
-                        onChange={(e) => setSortByEtaAsc(e.target.value === 'asc')}
-                        maxW={{ base: '100%', md: '150px' }}
-                    >
-                        <option value="asc">Ascending</option>
-                        <option value="desc">Descending</option>
-                    </Select>
-                </Box>
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </Select>
 
-                <Button colorScheme="blue" onClick={exportToCSV} w={{ base: '100%', md: 'auto' }}>
+                <Button colorScheme="blue" onClick={exportToCSV}>
                     Export Table to CSV
                 </Button>
             </Box>
@@ -290,62 +278,60 @@ export default function Dashboard() {
                 Recent Shipments
             </Heading>
 
-            <Box overflowX="auto">
-                <Table variant="simple" size="md" minW="600px">
-                    <Thead>
-                        <Tr>
-                            <Th>Shipment ID</Th>
-                            <Th>Origin</Th>
-                            <Th>Destination</Th>
-                            <Th>Status</Th>
-                            <Th>ETA</Th>
-                            <Th>Notes</Th>
-                            <Th>Upload Document</Th>
+            <Table variant="simple" size="md">
+                <Thead>
+                    <Tr>
+                        <Th>Shipment ID</Th>
+                        <Th>Origin</Th>
+                        <Th>Destination</Th>
+                        <Th>Status</Th>
+                        <Th>ETA</Th>
+                        <Th>Notes</Th>
+                        <Th>Upload Document</Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {filteredShipments.map((shipment) => (
+                        <Tr key={shipment.id}>
+                            <Td>{shipment.id}</Td>
+                            <Td>{shipment.origin}</Td>
+                            <Td>{shipment.destination}</Td>
+                            <Td>{shipment.status}</Td>
+                            <Td>{formatETA(shipment.eta)}</Td>
+
+                            <Td>
+                                <Input
+                                    size="sm"
+                                    placeholder="Add notes"
+                                    value={shipment.notes || ''}
+                                    onChange={(e) => handleNotesChange(shipment.id, e.target.value)}
+                                />
+                            </Td>
+
+                            <Td>
+                                <input
+                                    type="file"
+                                    id={`file-upload-${shipment.id}`}
+                                    style={{ display: 'none' }}
+                                    onChange={(e) =>
+                                        handleFileChange(shipment.id, e.target.files ? e.target.files[0] : null)
+                                    }
+                                />
+                                <label htmlFor={`file-upload-${shipment.id}`}>
+                                    <Button as="span" size="sm" leftIcon={<Upload size={16} />} colorScheme="blue">
+                                        {shipment.doc ? 'Change File' : 'Upload File'}
+                                    </Button>
+                                </label>
+                                {shipment.doc && (
+                                    <Text mt={1} fontSize="xs" isTruncated maxW="150px" title={shipment.doc.name}>
+                                        {shipment.doc.name}
+                                    </Text>
+                                )}
+                            </Td>
                         </Tr>
-                    </Thead>
-                    <Tbody>
-                        {filteredShipments.map((shipment) => (
-                            <Tr key={shipment.id}>
-                                <Td>{shipment.id}</Td>
-                                <Td>{shipment.origin}</Td>
-                                <Td>{shipment.destination}</Td>
-                                <Td>{shipment.status}</Td>
-                                <Td>{formatETA(shipment.eta)}</Td>
-
-                                <Td>
-                                    <Input
-                                        size="sm"
-                                        placeholder="Add notes"
-                                        value={shipment.notes || ''}
-                                        onChange={(e) => handleNotesChange(shipment.id, e.target.value)}
-                                    />
-                                </Td>
-
-                                <Td>
-                                    <input
-                                        type="file"
-                                        id={`file-upload-${shipment.id}`}
-                                        style={{ display: 'none' }}
-                                        onChange={(e) =>
-                                            handleFileChange(shipment.id, e.target.files ? e.target.files[0] : null)
-                                        }
-                                    />
-                                    <label htmlFor={`file-upload-${shipment.id}`}>
-                                        <Button as="span" size="sm" leftIcon={<Upload size={16} />} colorScheme="blue">
-                                            {shipment.doc ? 'Change File' : 'Upload File'}
-                                        </Button>
-                                    </label>
-                                    {shipment.doc && (
-                                        <Text mt={1} fontSize="xs" isTruncated maxW="150px" title={shipment.doc.name}>
-                                            {shipment.doc.name}
-                                        </Text>
-                                    )}
-                                </Td>
-                            </Tr>
-                        ))}
-                    </Tbody>
-                </Table>
-            </Box>
+                    ))}
+                </Tbody>
+            </Table>
         </Box>
     );
 }
