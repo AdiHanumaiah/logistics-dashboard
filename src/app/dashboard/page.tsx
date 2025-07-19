@@ -1,5 +1,6 @@
 'use client';
 
+import ShipmentMap from '@/components/ShipmentMap';
 import {
     Box,
     Heading,
@@ -14,6 +15,7 @@ import {
     Th,
     Td,
     Text,
+    VStack,          // <-- Import VStack here
 } from '@chakra-ui/react';
 
 const mockShipments = [
@@ -65,32 +67,46 @@ export default function Dashboard() {
                 </Stat>
             </SimpleGrid>
 
-            <Heading size="md" mb={4}>
-                Recent Shipments
-            </Heading>
+            {/* Wrap map and table in VStack with spacing */}
+            <VStack spacing={8} align="stretch">
+                <Box>
+                    <Heading size="md" mb={4}>
+                        Live Shipment Map
+                    </Heading>
+                    {/* Add borderRadius and overflow here for neat edges */}
+                    <Box h="400px" borderRadius="md" overflow="hidden">
+                        <ShipmentMap />
+                    </Box>
+                </Box>
 
-            <Table variant="simple" size="md">
-                <Thead>
-                    <Tr>
-                        <Th>Shipment ID</Th>
-                        <Th>Origin</Th>
-                        <Th>Destination</Th>
-                        <Th>Status</Th>
-                        <Th>ETA</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {mockShipments.map((shipment) => (
-                        <Tr key={shipment.id}>
-                            <Td>{shipment.id}</Td>
-                            <Td>{shipment.origin}</Td>
-                            <Td>{shipment.destination}</Td>
-                            <Td>{shipment.status}</Td>
-                            <Td>{shipment.eta}</Td>
-                        </Tr>
-                    ))}
-                </Tbody>
-            </Table>
+                <Box>
+                    <Heading size="md" mb={4}>
+                        Recent Shipments
+                    </Heading>
+                    <Table variant="simple" size="md">
+                        <Thead>
+                            <Tr>
+                                <Th>Shipment ID</Th>
+                                <Th>Origin</Th>
+                                <Th>Destination</Th>
+                                <Th>Status</Th>
+                                <Th>ETA</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {mockShipments.map((shipment) => (
+                                <Tr key={shipment.id}>
+                                    <Td>{shipment.id}</Td>
+                                    <Td>{shipment.origin}</Td>
+                                    <Td>{shipment.destination}</Td>
+                                    <Td>{shipment.status}</Td>
+                                    <Td>{shipment.eta}</Td>
+                                </Tr>
+                            ))}
+                        </Tbody>
+                    </Table>
+                </Box>
+            </VStack>
         </Box>
     );
 }
