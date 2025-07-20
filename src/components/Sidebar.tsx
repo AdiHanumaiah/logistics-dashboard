@@ -6,10 +6,14 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Create Shipment', href: '/shipments/create' },
+  { label: 'Shipment History', href: '/history' },
   { label: 'Routes', href: '/routes' },
   { label: 'Drivers', href: '/drivers' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Subscribe', href: '/subscribe' },
+  { label: 'Login', href: '/auth/login' },
+  { label: 'Sign Up', href: '/auth/signup' },
 ];
 
 export default function Sidebar() {
@@ -19,13 +23,15 @@ export default function Sidebar() {
     <Box
       as="nav"
       pos="fixed"
-      top="0"
+      top="60px" // Navbar height
       left="0"
-      height="100vh"
+      height="calc(100vh - 60px)"
       width="200px"
       bg="gray.800"
       color="white"
       padding="20px"
+      boxShadow="2px 0 5px rgba(0,0,0,0.3)"
+      zIndex={20}
     >
       <VStack align="start" spacing={6}>
         {navItems.map(({ label, href }) => {

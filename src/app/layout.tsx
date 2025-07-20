@@ -3,6 +3,9 @@
 import { ReactNode } from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 import Sidebar from '../components/Sidebar';
+import Navbar from '../components/Navbar';
+
+const NAVBAR_HEIGHT = 60; // Adjust if your Navbar height changes
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -15,10 +18,34 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           crossOrigin=""
         />
       </head>
-      <body style={{ margin: 0 }}>
+      <body style={{ margin: 0, height: '100vh' }}>
         <ChakraProvider>
-          <Sidebar />
-          <main style={{ marginLeft: 200, padding: 20 }}>{children}</main>
+          <Navbar />
+
+          {/* Flex container with margin-top for navbar height */}
+          <div
+            style={{
+              display: 'flex',
+              height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+              marginTop: NAVBAR_HEIGHT,
+              overflow: 'hidden',
+            }}
+          >
+            <Sidebar />
+
+            <main
+              style={{
+                marginLeft: 200, // sidebar width
+                flexGrow: 1,
+                height: '100%',
+                overflowY: 'auto',
+                padding: 20,
+                backgroundColor: 'var(--chakra-colors-white)',
+              }}
+            >
+              {children}
+            </main>
+          </div>
         </ChakraProvider>
       </body>
     </html>
