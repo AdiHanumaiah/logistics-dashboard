@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           integrity="sha256-o9N1j7kSMNVpLZ3eTnSxw2SgpehKjv9gQTY5mQ+S+Og="
           crossOrigin=""
         />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body style={{ margin: 0, height: '100vh' }}>
         <ChakraProvider>
