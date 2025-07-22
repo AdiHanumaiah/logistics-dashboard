@@ -31,9 +31,14 @@ const Links = [
 const Navbar = () => {
     const { colorMode, toggleColorMode } = useColorMode();
 
+    // Move useColorModeValue calls to the top level
+    const bgColor = useColorModeValue('gray.100', 'gray.900');
+    const textColor = useColorModeValue('gray.700', 'gray.200');
+    const hoverBg = useColorModeValue('teal.200', 'teal.700');
+
     return (
         <Box
-            bg={useColorModeValue('gray.100', 'gray.900')}
+            bg={bgColor}
             px={4}
             boxShadow="md"
             position="sticky"
@@ -58,7 +63,7 @@ const Navbar = () => {
                     >
                         L
                     </Box>
-                    <Text fontWeight="bold" fontSize="lg" userSelect="none" color={useColorModeValue('gray.700', 'gray.200')}>
+                    <Text fontWeight="bold" fontSize="lg" userSelect="none" color={textColor}>
                         LogiTrack
                     </Text>
                 </HStack>
@@ -75,7 +80,7 @@ const Navbar = () => {
                             rounded="md"
                             _hover={{
                                 textDecoration: 'none',
-                                bg: useColorModeValue('teal.200', 'teal.700'),
+                                bg: hoverBg,
                             }}
                             fontWeight="medium"
                         >

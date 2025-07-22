@@ -28,7 +28,7 @@ export default function LoginPage() {
                 </FormControl>
                 <Button colorScheme="teal" width="full">Log In</Button>
                 <Text fontSize="sm">
-                    Don't have an account?{' '}
+                    Don&apos;t have an account?{' '}
                     <Link as={NextLink} href="/auth/signup" color="teal.500">Sign up</Link>
                 </Text>
             </VStack>
