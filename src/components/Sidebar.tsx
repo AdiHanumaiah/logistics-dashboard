@@ -14,6 +14,8 @@ const navItems = [
   { label: 'Subscribe', href: '/subscribe' },
   { label: 'Login', href: '/auth/login' },
   { label: 'Sign Up', href: '/auth/signup' },
+  { label: 'Landing Page', href: '/intro' },
+  { label: 'Onboard Page', href: '/onboard' },
 ];
 
 export default function Sidebar() {
