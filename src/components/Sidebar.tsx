@@ -8,8 +8,6 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Create Shipment', href: '/shipments/create' },
   { label: 'Shipment History', href: '/history' },
-  { label: 'Routes', href: '/routes' },
-  { label: 'Drivers', href: '/drivers' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Subscribe', href: '/subscribe' },
   { label: 'Login', href: '/auth/login' },

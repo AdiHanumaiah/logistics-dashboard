@@ -14,13 +14,29 @@ import {
     Badge,
 } from '@chakra-ui/react';
 
+// Define the type for a Shipment
+type Shipment = {
+    id: string;
+    trackingNumber: string;
+    sender: string;
+    recipient: string;
+    origin: string;
+    destination: string;
+    status: string;
+};
+
 export default function ShipmentHistoryPage() {
-    const [shipments, setShipments] = useState([]);
+    const [shipments, setShipments] = useState<Shipment[]>([]);
 
     useEffect(() => {
         const saved = localStorage.getItem('dashboardShipments');
         if (saved) {
-            setShipments(JSON.parse(saved));
+            try {
+                const parsed = JSON.parse(saved) as Shipment[];
+                setShipments(parsed);
+            } catch {
+                setShipments([]);
+            }
         }
     }, []);
 
